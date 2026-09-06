@@ -1,4 +1,4 @@
-module github.com/guryev-vladislav/tracelog
+module github.com/guryev-vladislav/go-logger
 
 go 1.27.0
 

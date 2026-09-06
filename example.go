@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/guryev-vladislav/tracelog/pkg/logger"
+	"github.com/guryev-vladislav/go-logger/pkg/logger"
 )
 
 const (

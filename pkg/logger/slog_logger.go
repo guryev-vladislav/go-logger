@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/guryev-vladislav/tracelog/pkg/handlers"
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 )
 
 type slogLogger struct {

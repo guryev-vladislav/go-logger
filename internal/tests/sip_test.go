@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/guryev-vladislav/tracelog/pkg/handlers"
-	logger "github.com/guryev-vladislav/tracelog/pkg/logger"
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
+	logger "github.com/guryev-vladislav/go-logger/pkg/logger"
 )
 
 func newLocalTestLogger(t *testing.T) logger.Logger {

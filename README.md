@@ -1,6 +1,6 @@
-# Tracelog
+# Go Logger
 
-`tracelog` is a structured logging package for Go applications. It combines local `log/slog` logging with OpenTelemetry tracing and supports SIP message formatting for readable console output and trace events.
+`go-logger` is a structured logging package for Go applications. It combines local `log/slog` logging with OpenTelemetry tracing and supports SIP message formatting for readable console output and trace events.
 
 ## Features
 
@@ -22,7 +22,7 @@
 Install the package from GitHub:
 
 ```text
-go get github.com/guryev-vladislav/tracelog/pkg/logger
+go get github.com/guryev-vladislav/go-logger/pkg/logger
 ```
 
 ## Configuration

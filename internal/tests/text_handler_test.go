@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/guryev-vladislav/tracelog/pkg/handlers"
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 )
 
 func TestTextHandlerPreservesAttrsAndGroupsWithoutColor(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/guryev-vladislav/tracelog/pkg/handlers"
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 )
 
 type slogLoggerFactory struct {
