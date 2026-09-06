@@ -21,7 +21,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/guryev-vladislav/tracelog/pkg/handlers"
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 )
 
 var (

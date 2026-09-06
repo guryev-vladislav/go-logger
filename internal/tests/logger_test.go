@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	logger "github.com/guryev-vladislav/tracelog/pkg/logger"
+	logger "github.com/guryev-vladislav/go-logger/pkg/logger"
 )
 
 var ErrTestError = errors.New("test error")
