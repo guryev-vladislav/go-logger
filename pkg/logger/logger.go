@@ -15,6 +15,11 @@ type LoggerConfig struct {
 }
 
 func New(cfg LoggerConfig) (LoggerFactory, error) {
+	logFilePath := cfg.LogFilePath
+	if logFilePath == emptyString {
+		logFilePath = os.Getenv(EnvKeyLogFile)
+	}
+
 	var level = slog.LevelInfo
 	if os.Getenv(EnvKeyLoggerMinLevel) != emptyString {
 		level = getSlogLevelByEnv()
@@ -24,7 +29,7 @@ func New(cfg LoggerConfig) (LoggerFactory, error) {
 		return NewSlogLoggerFactory(
 			cfg.ServiceName,
 			cfg.Version,
-			cfg.LogFilePath,
+			logFilePath,
 			os.Getenv(EnvKeyStandDomain),
 			level,
 		)
@@ -33,7 +38,7 @@ func New(cfg LoggerConfig) (LoggerFactory, error) {
 	return NewTraceLoggerFactory(
 		cfg.ServiceName,
 		cfg.Version,
-		cfg.LogFilePath,
+		logFilePath,
 		os.Getenv(EnvKeyStandDomain),
 		cfg.JaegerEndpoint,
 		level,
@@ -46,7 +51,12 @@ func getFunctionName() string {
 		return "unknown function name"
 	}
 
-	parts := strings.Split(runtime.FuncForPC(pc).Name(), "/")
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown function name"
+	}
+
+	parts := strings.Split(fn.Name(), "/")
 	funcName := parts[len(parts)-1]
 
 	parts = strings.Split(funcName, ".")

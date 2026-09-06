@@ -13,8 +13,8 @@ func TrimFilePath(path string) string {
 	}
 
 	parts := strings.Split(filepath.ToSlash(path), pathSeparator)
-	if len(parts) >= defaultMaxBackups {
-		return strings.Join(parts[len(parts)-defaultMaxBackups:], pathSeparator)
+	if len(parts) >= maxPathParts {
+		return strings.Join(parts[len(parts)-maxPathParts:], pathSeparator)
 	}
 
 	return parts[0]

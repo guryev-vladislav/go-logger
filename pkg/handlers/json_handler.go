@@ -8,14 +8,12 @@ import (
 )
 
 type JSONHandlerWrapper struct {
-	handler     slog.Handler
-	serviceName string
+	handler slog.Handler
 }
 
 func NewJSONHandlerWrapper(handler slog.Handler, serviceName string) *JSONHandlerWrapper {
 	return &JSONHandlerWrapper{
-		handler:     handler,
-		serviceName: serviceName,
+		handler: handler,
 	}
 }
 
@@ -68,14 +66,12 @@ func (h *JSONHandlerWrapper) Handle(ctx context.Context, rec slog.Record) error 
 
 func (h *JSONHandlerWrapper) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &JSONHandlerWrapper{
-		handler:     h.handler.WithAttrs(attrs),
-		serviceName: h.serviceName,
+		handler: h.handler.WithAttrs(attrs),
 	}
 }
 
 func (h *JSONHandlerWrapper) WithGroup(name string) slog.Handler {
 	return &JSONHandlerWrapper{
-		handler:     h.handler.WithGroup(name),
-		serviceName: h.serviceName,
+		handler: h.handler.WithGroup(name),
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"gitlab.satel.org/rtuc-forks/aqa/logger.git/pkg/handlers"
+	"github.com/guryev-vladislav/tracelog/pkg/handlers"
 )
 
 type slogLoggerFactory struct {
@@ -40,9 +40,6 @@ func NewSlogLoggerFactory(
 
 		baseJSONHandler := slog.NewJSONHandler(fileWriter, &slog.HandlerOptions{
 			Level: level,
-			ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr { //nolint:unused
-				return a
-			},
 		})
 
 		fileHandler = handlers.NewJSONHandlerWrapper(baseJSONHandler, serviceName)

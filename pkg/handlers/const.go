@@ -8,11 +8,11 @@ const (
 	msgFormat    = "%s {%s}"
 	outputFormat = "%s - %s - %s - %s:%d - %s: %s\n"
 
-	pathSeparator     = "/"
-	funcSeparator     = '.'
-	pathSlash         = '/'
-	defaultMaxBackups = 2
-	emptyString       = ""
+	pathSeparator = "/"
+	funcSeparator = '.'
+	pathSlash     = '/'
+	maxPathParts  = 2
+	emptyString   = ""
 
 	funcNameAttr = "func_name"
 	sourceAttr   = "source"

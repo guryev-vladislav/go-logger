@@ -150,16 +150,10 @@ func ExtractCallIDFromSIP(rawMessage string) string {
 
 	lines := strings.SplitSeq(rawMessage, newline)
 	for line := range lines {
-		lineLower := strings.ToLower(line)
-		callIDLower := strings.ToLower(callIDPrefix)
-
-		if strings.HasPrefix(lineLower, callIDLower) {
-			value := strings.TrimPrefix(line, callIDPrefix)
-			if after, ok := strings.CutPrefix(line, callIDPrefix+" "); ok {
-				value = after
+		if strings.HasPrefix(strings.ToLower(line), strings.ToLower(callIDPrefix)) {
+			if _, value, ok := strings.Cut(line, ":"); ok {
+				return strings.TrimSpace(value)
 			}
-
-			return strings.TrimSpace(value)
 		}
 	}
 

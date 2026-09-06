@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.satel.org/rtuc-forks/aqa/logger.git/pkg/handlers"
+	"github.com/guryev-vladislav/tracelog/pkg/handlers"
 )
 
 type slogLogger struct {
@@ -84,6 +84,7 @@ func (l *slogLogger) SIP(direction string, msg string, fields ...slog.Attr) {
 		return
 	}
 
+	direction = strings.ToUpper(direction)
 	if direction != SIPDirectionSent && direction != SIPDirectionReceived {
 		errMsg := fmt.Sprintf("%s: %s", ErrInvalidSIPDirection.Error(), direction)
 		l.log(slog.LevelError, sipLogFailedMsg,

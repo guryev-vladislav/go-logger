@@ -17,6 +17,8 @@ type TextHandler struct {
 	mu          sync.Mutex
 	useColor    bool
 	serviceName string
+	attrs       []slog.Attr
+	group       string
 }
 
 func NewTextHandler(out io.Writer, level slog.Level, useColor bool, serviceName string) *TextHandler {
@@ -36,7 +38,6 @@ func (h *TextHandler) Handle(ctx context.Context, rec slog.Record) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	h.useColor = true
 	timeStr := rec.Time.Format(timeFormat)
 	levelStr := strings.ToUpper(rec.Level.String())
 	levelStr = h.colorizeLevel(rec.Level, levelStr)
@@ -56,21 +57,18 @@ func (h *TextHandler) Handle(ctx context.Context, rec slog.Record) error {
 		}
 	}
 
+	attrs := make([]string, 0, len(h.attrs)+rec.NumAttrs())
+	for _, attr := range h.attrs {
+		h.appendAttr(&attrs, attr)
+	}
+	rec.Attrs(func(attr slog.Attr) bool {
+		h.appendAttr(&attrs, attr)
+		return true
+	})
+
 	msg := rec.Message
-	if rec.NumAttrs() > 0 {
-		var attrs []string
-
-		rec.Attrs(func(a slog.Attr) bool {
-			if a.Key != serviceAttr && a.Key != funcNameAttr && a.Key != sourceAttr {
-				attrs = append(attrs, fmt.Sprintf(attrFormat, a.Key, a.Value.Any()))
-			}
-
-			return true
-		})
-
-		if len(attrs) > 0 {
-			msg = fmt.Sprintf(msgFormat, msg, strings.Join(attrs, ", "))
-		}
+	if len(attrs) > 0 {
+		msg = fmt.Sprintf(msgFormat, msg, strings.Join(attrs, ", "))
 	}
 
 	if h.useColor {
@@ -95,16 +93,51 @@ func (h *TextHandler) Handle(ctx context.Context, rec slog.Record) error {
 }
 
 func (h *TextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	allAttrs := make([]slog.Attr, 0, len(h.attrs)+len(attrs))
+	allAttrs = append(allAttrs, h.attrs...)
+	allAttrs = append(allAttrs, attrs...)
+
 	return &TextHandler{
 		out:         h.out,
 		level:       h.level,
 		useColor:    h.useColor,
 		serviceName: h.serviceName,
+		attrs:       allAttrs,
+		group:       h.group,
 	}
 }
 
 func (h *TextHandler) WithGroup(name string) slog.Handler {
-	return h
+	if name == emptyString {
+		return h
+	}
+
+	group := name
+	if h.group != emptyString {
+		group = h.group + "." + name
+	}
+
+	return &TextHandler{
+		out:         h.out,
+		level:       h.level,
+		useColor:    h.useColor,
+		serviceName: h.serviceName,
+		attrs:       h.attrs,
+		group:       group,
+	}
+}
+
+func (h *TextHandler) appendAttr(attrs *[]string, attr slog.Attr) {
+	if attr.Key == serviceAttr || attr.Key == funcNameAttr || attr.Key == sourceAttr {
+		return
+	}
+
+	key := attr.Key
+	if h.group != emptyString {
+		key = h.group + "." + key
+	}
+
+	*attrs = append(*attrs, fmt.Sprintf(attrFormat, key, attr.Value.Any()))
 }
 
 func (h *TextHandler) colorizeLevel(level slog.Level, str string) string {
