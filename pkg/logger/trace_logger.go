@@ -21,7 +21,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"gitlab.satel.org/rtuc-forks/aqa/logger.git/pkg/handlers"
+	"github.com/guryev-vladislav/tracelog/pkg/handlers"
 )
 
 var (
@@ -39,6 +39,7 @@ type traceLogger struct {
 	span         trace.Span
 	functionName string
 	logger       *slog.Logger
+	fields       []slog.Attr
 }
 
 func NewTraceLoggerFactory(
@@ -214,6 +215,7 @@ func (f *TraceLoggerFactory) startSpan(
 		span:         span,
 		functionName: spanName,
 		logger:       f.logger,
+		fields:       append([]slog.Attr(nil), fields...),
 	}
 
 	return ctx, logger
@@ -323,6 +325,7 @@ func (t *traceLogger) SIP(direction string, msg string, fields ...slog.Attr) {
 		return
 	}
 
+	direction = strings.ToUpper(direction)
 	if direction != SIPDirectionSent && direction != SIPDirectionReceived {
 		errMsg := fmt.Sprintf("%s: %s", ErrInvalidSIPDirection.Error(), direction)
 		t.logToConsole(slog.LevelError, sipLogFailedMsg, []slog.Attr{
@@ -355,9 +358,7 @@ func (t *traceLogger) SIP(direction string, msg string, fields ...slog.Attr) {
 }
 
 func (t *traceLogger) With(fields ...slog.Attr) {
-	if len(fields) > 0 {
-		_ = fields
-	}
+	t.fields = append(t.fields, fields...)
 }
 
 func (t *traceLogger) handlePanic() {
@@ -374,6 +375,8 @@ func (t *traceLogger) handlePanic() {
 		if t.logger != nil {
 			t.logPanicError(err)
 		}
+
+		panic(err)
 	}
 }
 
@@ -464,7 +467,7 @@ func (t *traceLogger) logToSpan(level string, msg string, fields []slog.Attr) {
 		return
 	}
 
-	attrs := convertFieldsToAttributes(fields)
+	attrs := convertFieldsToAttributes(t.allFields(fields))
 	t.span.AddEvent(fmt.Sprintf(prefixFormat, level, msg), trace.WithAttributes(attrs...))
 }
 
@@ -477,6 +480,7 @@ func (t *traceLogger) logToConsole(level slog.Level, msg string, fields []slog.A
 	pc, file, line, funcName := getCallerPCForTraceLogger(5)
 	rec := slog.NewRecord(time.Now(), level, fullMsg, pc)
 
+	fields = t.allFields(fields)
 	hasFuncName, hasSource := t.checkConsoleFields(fields)
 	t.addCallerInfoToRecord(rec, hasFuncName, hasSource, funcName, file, line)
 
@@ -485,6 +489,12 @@ func (t *traceLogger) logToConsole(level slog.Level, msg string, fields []slog.A
 	}
 
 	t.handleLogRecord(rec, level)
+}
+
+func (t *traceLogger) allFields(fields []slog.Attr) []slog.Attr {
+	allFields := make([]slog.Attr, 0, len(t.fields)+len(fields))
+	allFields = append(allFields, t.fields...)
+	return append(allFields, fields...)
 }
 
 func (t *traceLogger) addCallerInfoToRecord(

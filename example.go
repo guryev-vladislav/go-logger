@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"gitlab.satel.org/rtuc-forks/aqa/logger.git/pkg/logger"
+	"github.com/guryev-vladislav/tracelog/pkg/logger"
 )
 
 const (
@@ -127,6 +127,8 @@ func processRequest(ctx context.Context, logFactory logger.LoggerFactory) {
 			slog.String("error", err.Error()),
 		)
 		log.ErrorIn("processRequest", err)
+
+		log.Warning("processRequest")
 
 		return
 	}
