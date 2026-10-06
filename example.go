@@ -24,7 +24,7 @@ var (
 		logger.EnvKeyLoggerDst:      "local",
 		logger.EnvKeyStandDomain:    "",
 		logger.EnvKeyLoggerMinLevel: "INFO",
-		logger.EnvKeyLogFile:        "log.json",
+		logger.EnvKeyLogFile:        "logs/log.json",
 	}
 )
 
