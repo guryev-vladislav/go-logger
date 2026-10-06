@@ -42,8 +42,7 @@ const (
 )
 
 const (
-	callerSkipDepth = 2
-	emptyString     = ""
+	emptyString = ""
 
 	logFileMB       = 100
 	logFileBackups  = 3
