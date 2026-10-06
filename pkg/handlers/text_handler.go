@@ -61,6 +61,7 @@ func (h *TextHandler) Handle(ctx context.Context, rec slog.Record) error {
 	for _, attr := range h.attrs {
 		h.appendAttr(&attrs, attr)
 	}
+
 	rec.Attrs(func(attr slog.Attr) bool {
 		h.appendAttr(&attrs, attr)
 		return true

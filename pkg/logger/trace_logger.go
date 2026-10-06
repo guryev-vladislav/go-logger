@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -20,8 +21,6 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/guryev-vladislav/go-logger/pkg/handlers"
 )
 
 var (
@@ -494,6 +493,7 @@ func (t *traceLogger) logToConsole(level slog.Level, msg string, fields []slog.A
 func (t *traceLogger) allFields(fields []slog.Attr) []slog.Attr {
 	allFields := make([]slog.Attr, 0, len(t.fields)+len(fields))
 	allFields = append(allFields, t.fields...)
+
 	return append(allFields, fields...)
 }
 

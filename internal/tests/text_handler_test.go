@@ -13,6 +13,7 @@ import (
 
 func TestTextHandlerPreservesAttrsAndGroupsWithoutColor(t *testing.T) {
 	var output bytes.Buffer
+
 	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service")
 	logger := slog.New(handler).With(slog.String("request_id", "abc"))
 
@@ -32,6 +33,7 @@ func TestTextHandlerPreservesAttrsAndGroupsWithoutColor(t *testing.T) {
 
 func TestTextHandlerFormatsRecord(t *testing.T) {
 	var output bytes.Buffer
+
 	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service")
 	record := slog.NewRecord(time.Now(), slog.LevelInfo, "message", 0)
 	record.AddAttrs(slog.String("key", "value"))
@@ -59,6 +61,7 @@ func TestTextHandlerUsesLevelSpecificColors(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var output bytes.Buffer
+
 			handler := handlers.NewTextHandler(&output, slog.LevelDebug, true, "service")
 			record := slog.NewRecord(time.Now(), test.level, test.name, 0)
 

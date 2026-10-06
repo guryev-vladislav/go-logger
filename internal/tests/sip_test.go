@@ -21,6 +21,7 @@ func newLocalTestLogger(t *testing.T) logger.Logger {
 	}
 
 	_, testLogger := factory.GetLoggerFromContext(context.Background())
+
 	return testLogger
 }
 
@@ -71,7 +72,12 @@ func TestSIPMetadataExtraction(t *testing.T) {
 		testLogger.SIP("RECEIVED", "SIP/2.0 200 OK\nCall-ID: test-call-456\nContent-Length: 0")
 	})
 	t.Run("SIPResponseWithMultipleStatusCodes", func(t *testing.T) {
-		responses := []string{"100 Trying", "180 Ringing", "200 OK", "302 Moved Temporarily", "400 Bad Request", "401 Unauthorized", "403 Forbidden", "404 Not Found", "408 Request Timeout", "480 Temporarily Unavailable", "486 Busy Here", "500 Server Internal Error", "503 Service Unavailable", "600 Busy Everywhere"}
+		responses := []string{
+			"100 Trying", "180 Ringing", "200 OK", "302 Moved Temporarily",
+			"400 Bad Request", "401 Unauthorized", "403 Forbidden", "404 Not Found",
+			"408 Request Timeout", "480 Temporarily Unavailable", "486 Busy Here",
+			"500 Server Internal Error", "503 Service Unavailable", "600 Busy Everywhere",
+		}
 		for _, response := range responses {
 			testLogger.SIP("RECEIVED", "SIP/2.0 "+response)
 		}
@@ -100,10 +106,25 @@ func TestSIPWithAdditionalFields(t *testing.T) {
 		testLogger.SIP("SENT", sipMessage, slog.String("transaction_id", "txn-123"))
 	})
 	t.Run("WithMultipleFields", func(t *testing.T) {
-		testLogger.SIP("RECEIVED", sipMessage, slog.String("proxy", "edge-01"), slog.Int("retry_count", 3), slog.Duration("latency", 150*time.Millisecond), slog.Bool("cached", false))
+		testLogger.SIP(
+			"RECEIVED",
+			sipMessage,
+			slog.String("proxy", "edge-01"),
+			slog.Int("retry_count", 3),
+			slog.Duration("latency", 150*time.Millisecond),
+			slog.Bool("cached", false),
+		)
 	})
 	t.Run("WithAllFieldTypes", func(t *testing.T) {
-		testLogger.SIP("SENT", sipMessage, slog.String("string_field", "value"), slog.Int("int_field", 42), slog.Float64("float_field", 3.14), slog.Bool("bool_field", true), slog.Any("any_field", map[string]string{"key": "value"}))
+		testLogger.SIP(
+			"SENT",
+			sipMessage,
+			slog.String("string_field", "value"),
+			slog.Int("int_field", 42),
+			slog.Float64("float_field", 3.14),
+			slog.Bool("bool_field", true),
+			slog.Any("any_field", map[string]string{"key": "value"}),
+		)
 	})
 }
 
@@ -111,16 +132,29 @@ func TestSIPComplexMessages(t *testing.T) {
 	testLogger := newLocalTestLogger(t)
 
 	t.Run("FullRegisterMessage", func(t *testing.T) {
-		testLogger.SIP("SENT", "REGISTER SIP/2.0\nVia: SIP/2.0/WS p6qufb5fe1od.invalid;branch=z9hG4bKk13semp6u\nMax-Forwards: 69\nTo: <sip>\nFrom: <sip:>;tag=c4vgt5vjha\nCall-ID: glpn6hr5nxbh9rsh6xugi6\nCSeq: 1 REGISTER\nContent-Length: 0")
+		message := "REGISTER SIP/2.0\n" +
+			"Via: SIP/2.0/WS p6qufb5fe1od.invalid;branch=z9hG4bKk13semp6u\n" +
+			"Max-Forwards: 69\nTo: <sip>\nFrom: <sip:>;tag=c4vgt5vjha\n" +
+			"Call-ID: glpn6hr5nxbh9rsh6xugi6\nCSeq: 1 REGISTER\nContent-Length: 0"
+		testLogger.SIP("SENT", message)
 	})
 	t.Run("FullUnauthorizedResponse", func(t *testing.T) {
-		testLogger.SIP("RECEIVED", "SIP/2.0 401 Unauthorized\nCall-ID: glpn6hr5nxbh9rsh6xugi6\nWWW-Authenticate: Digest realm=\"SIP-REGISTRAR\"\nContent-Length: 0")
+		message := "SIP/2.0 401 Unauthorized\n" +
+			"Call-ID: glpn6hr5nxbh9rsh6xugi6\n" +
+			"WWW-Authenticate: Digest realm=\"SIP-REGISTRAR\"\nContent-Length: 0"
+		testLogger.SIP("RECEIVED", message)
 	})
 	t.Run("InviteWithSDP", func(t *testing.T) {
-		testLogger.SIP("SENT", "INVITE sip:user@example.com SIP/2.0\nCall-ID: asd88asd77a@1.2.3.4\nContent-Type: application/sdp\nContent-Length: 147\n\nv=0\no=caller 2890844526 2890844526 IN IP4 client.example.com")
+		message := "INVITE sip:user@example.com SIP/2.0\n" +
+			"Call-ID: asd88asd77a@1.2.3.4\nContent-Type: application/sdp\n" +
+			"Content-Length: 147\n\nv=0\no=caller 2890844526 2890844526 IN IP4 client.example.com"
+		testLogger.SIP("SENT", message)
 	})
 	t.Run("MessageWithAuthHeaders", func(t *testing.T) {
-		testLogger.SIP("SENT", "REGISTER sip:example.com SIP/2.0\nCall-ID: asd88asd77a@1.2.3.4\nAuthorization: Digest username=\"user\"\nContent-Length: 0")
+		message := "REGISTER sip:example.com SIP/2.0\n" +
+			"Call-ID: asd88asd77a@1.2.3.4\n" +
+			"Authorization: Digest username=\"user\"\nContent-Length: 0"
+		testLogger.SIP("SENT", message)
 	})
 }
 
@@ -132,7 +166,9 @@ func TestSIPEdgeCases(t *testing.T) {
 		testLogger.SIP("SENT", "REGISTER sip:example.com SIP/2.0\n"+longHeader+"Content-Length: 0")
 	})
 	t.Run("MessageWithSpecialCharacters", func(t *testing.T) {
-		testLogger.SIP("SENT", "REGISTER sip:example.com SIP/2.0\nCall-ID: test-id-123\nContact: <sip:user@[2001:db8::1]:5060>\nContent-Length: 0")
+		message := "REGISTER sip:example.com SIP/2.0\nCall-ID: test-id-123\n" +
+			"Contact: <sip:user@[2001:db8::1]:5060>\nContent-Length: 0"
+		testLogger.SIP("SENT", message)
 	})
 	t.Run("MessageWithoutNewlines", func(t *testing.T) {
 		testLogger.SIP("SENT", "REGISTER sip:example.com SIP/2.0 Call-ID: test Content-Length: 0")
@@ -147,13 +183,16 @@ func TestSIPConcurrent(t *testing.T) {
 	sipMessage := "REGISTER sip:example.com SIP/2.0\nCall-ID: concurrent-test\nContent-Length: 0"
 
 	const iterations = 100
+
 	done := make(chan struct{}, iterations)
 	for i := range iterations {
 		go func(index int) {
 			testLogger.SIP("SENT", sipMessage, slog.Int("goroutine", index))
+
 			done <- struct{}{}
 		}(i)
 	}
+
 	for range iterations {
 		<-done
 	}
@@ -161,7 +200,12 @@ func TestSIPConcurrent(t *testing.T) {
 
 func TestSIPWithSpan(t *testing.T) {
 	t.Setenv(logger.EnvKeyLoggerDst, "")
-	factory, err := logger.New(logger.LoggerConfig{ServiceName: serviceName, Version: serviceVersion, JaegerEndpoint: "localhost:4317"})
+
+	factory, err := logger.New(logger.LoggerConfig{
+		ServiceName:    serviceName,
+		Version:        serviceVersion,
+		JaegerEndpoint: "localhost:4317",
+	})
 	if err != nil {
 		t.Skipf("Skipping trace test: %v", err)
 	}
@@ -186,5 +230,4 @@ func TestSIPWithSpan(t *testing.T) {
 		_, nilSpanLogger := factory.GetLoggerFromContext(context.Background())
 		nilSpanLogger.SIP("SENT", sipMessage)
 	})
-
 }

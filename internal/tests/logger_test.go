@@ -18,19 +18,31 @@ const (
 	serviceName    = "test-service"
 )
 
+func assertLoggerContext(t *testing.T, call func(context.Context) (context.Context, logger.Logger)) {
+	t.Helper()
+
+	newCtx, testLogger := call(context.Background())
+	if newCtx == nil || testLogger == nil {
+		t.Error("expected non-nil context and logger")
+	}
+}
+
 func TestSlogLogger(t *testing.T) {
 	t.Setenv(logger.EnvKeyLoggerDst, logger.Local)
 
 	cfg := logger.LoggerConfig{ServiceName: serviceName, Version: serviceVersion}
+
 	factory, err := logger.New(cfg)
 	if err != nil {
 		t.Fatalf("failed to create logger factory: %v", err)
 	}
+
 	if factory == nil {
 		t.Fatal("factory is nil")
 	}
 
 	ctx := context.Background()
+
 	_, testLogger := factory.GetLoggerFromContext(ctx)
 	if testLogger == nil {
 		t.Fatal("logger is nil")
@@ -78,37 +90,25 @@ func TestSlogLoggerFactory(t *testing.T) {
 
 	tests := []struct {
 		name string
-		call func(context.Context)
+		call func(context.Context) (context.Context, logger.Logger)
 	}{
-		{name: "GetLoggerFromContext", call: func(ctx context.Context) {
-			newCtx, testLogger := factory.GetLoggerFromContext(ctx)
-			if newCtx == nil || testLogger == nil {
-				t.Error("expected non-nil context and logger")
-			}
+		{name: "GetLoggerFromContext", call: func(ctx context.Context) (context.Context, logger.Logger) {
+			return factory.GetLoggerFromContext(ctx)
 		}},
-		{name: "GetLoggerFromContextWithFields", call: func(ctx context.Context) {
-			newCtx, testLogger := factory.GetLoggerFromContext(ctx, slog.String("param", "value"))
-			if newCtx == nil || testLogger == nil {
-				t.Error("expected non-nil context and logger")
-			}
+		{name: "GetLoggerFromContextWithFields", call: func(ctx context.Context) (context.Context, logger.Logger) {
+			return factory.GetLoggerFromContext(ctx, slog.String("param", "value"))
 		}},
-		{name: "GetLoggerFromContextWithSpanName", call: func(ctx context.Context) {
-			newCtx, testLogger := factory.GetLoggerFromContextWithSpanName(ctx, "customSpan")
-			if newCtx == nil || testLogger == nil {
-				t.Error("expected non-nil context and logger")
-			}
+		{name: "GetLoggerFromContextWithSpanName", call: func(ctx context.Context) (context.Context, logger.Logger) {
+			return factory.GetLoggerFromContextWithSpanName(ctx, "customSpan")
 		}},
-		{name: "GetLoggerFromContextWithEmptySpanName", call: func(ctx context.Context) {
-			newCtx, testLogger := factory.GetLoggerFromContextWithSpanName(ctx, "")
-			if newCtx == nil || testLogger == nil {
-				t.Error("expected non-nil context and logger")
-			}
+		{name: "GetLoggerFromContextWithEmptySpanName", call: func(ctx context.Context) (context.Context, logger.Logger) {
+			return factory.GetLoggerFromContextWithSpanName(ctx, "")
 		}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.call(context.Background())
+			assertLoggerContext(t, test.call)
 		})
 	}
 
@@ -119,10 +119,12 @@ func TestSlogLoggerFactory(t *testing.T) {
 
 func TestSlogLoggerPanic(t *testing.T) {
 	t.Setenv(logger.EnvKeyLoggerDst, logger.Local)
+
 	factory, err := logger.New(logger.LoggerConfig{ServiceName: serviceName, Version: serviceVersion})
 	if err != nil {
 		t.Fatalf("failed to create logger factory: %v", err)
 	}
+
 	_, testLogger := factory.GetLoggerFromContext(context.Background())
 
 	defer func() {
@@ -130,15 +132,18 @@ func TestSlogLoggerPanic(t *testing.T) {
 			t.Error("expected panic but did not occur")
 		}
 	}()
+
 	testLogger.Panic("test panic")
 }
 
 func TestSlogLoggerPanicWithFields(t *testing.T) {
 	t.Setenv(logger.EnvKeyLoggerDst, logger.Local)
+
 	factory, err := logger.New(logger.LoggerConfig{ServiceName: serviceName, Version: serviceVersion})
 	if err != nil {
 		t.Fatalf("failed to create logger factory: %v", err)
 	}
+
 	_, testLogger := factory.GetLoggerFromContext(context.Background())
 
 	defer func() {
@@ -146,15 +151,18 @@ func TestSlogLoggerPanicWithFields(t *testing.T) {
 			t.Error("expected panic but did not occur")
 		}
 	}()
+
 	testLogger.Panic("test panic with fields", slog.String("key", "value"))
 }
 
 func TestSlogLoggerEndWithPanic(t *testing.T) {
 	t.Setenv(logger.EnvKeyLoggerDst, logger.Local)
+
 	factory, err := logger.New(logger.LoggerConfig{ServiceName: serviceName, Version: serviceVersion})
 	if err != nil {
 		t.Fatalf("failed to create logger factory: %v", err)
 	}
+
 	_, testLogger := factory.GetLoggerFromContext(context.Background())
 
 	defer func() {
@@ -162,8 +170,10 @@ func TestSlogLoggerEndWithPanic(t *testing.T) {
 			t.Error("expected panic but did not occur")
 		}
 	}()
+
 	func() {
 		defer testLogger.End()
+
 		panic("test panic")
 	}()
 }
