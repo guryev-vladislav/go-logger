@@ -8,9 +8,8 @@ import (
 	"os"
 	"time"
 
-	"gopkg.in/natefinch/lumberjack.v2"
-
 	"github.com/guryev-vladislav/go-logger/pkg/handlers"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type slogLoggerFactory struct {
