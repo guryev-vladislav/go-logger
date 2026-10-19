@@ -17,16 +17,24 @@ type TextHandler struct {
 	mu          sync.Mutex
 	useColor    bool
 	serviceName string
+	version     string
 	attrs       []slog.Attr
 	group       string
 }
 
-func NewTextHandler(out io.Writer, level slog.Level, useColor bool, serviceName string) *TextHandler {
+func NewTextHandler(
+	out io.Writer,
+	level slog.Level,
+	useColor bool,
+	serviceName string,
+	version string,
+) *TextHandler {
 	return &TextHandler{
 		out:         out,
 		level:       level,
 		useColor:    useColor,
 		serviceName: serviceName,
+		version:     formatVersion(version),
 	}
 }
 
@@ -83,7 +91,7 @@ func (h *TextHandler) Handle(ctx context.Context, rec slog.Record) error {
 		outputFormat,
 		timeStr,
 		levelStr,
-		h.serviceName,
+		h.serviceColumn(),
 		file,
 		line,
 		funcName,
@@ -103,6 +111,7 @@ func (h *TextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		level:       h.level,
 		useColor:    h.useColor,
 		serviceName: h.serviceName,
+		version:     h.version,
 		attrs:       allAttrs,
 		group:       h.group,
 	}
@@ -123,13 +132,14 @@ func (h *TextHandler) WithGroup(name string) slog.Handler {
 		level:       h.level,
 		useColor:    h.useColor,
 		serviceName: h.serviceName,
+		version:     h.version,
 		attrs:       h.attrs,
 		group:       group,
 	}
 }
 
 func (h *TextHandler) appendAttr(attrs *[]string, attr slog.Attr) {
-	if attr.Key == serviceAttr || attr.Key == funcNameAttr || attr.Key == sourceAttr {
+	if attr.Key == serviceAttr || attr.Key == versionAttr || attr.Key == funcNameAttr || attr.Key == sourceAttr {
 		return
 	}
 
@@ -139,6 +149,27 @@ func (h *TextHandler) appendAttr(attrs *[]string, attr slog.Attr) {
 	}
 
 	*attrs = append(*attrs, fmt.Sprintf(attrFormat, key, attr.Value.Any()))
+}
+
+func (h *TextHandler) serviceColumn() string {
+	if h.version == emptyString {
+		return h.serviceName
+	}
+
+	return h.serviceName + space + h.version
+}
+
+func formatVersion(version string) string {
+	version = strings.TrimSpace(version)
+	if version == emptyString {
+		return emptyString
+	}
+
+	if strings.HasPrefix(strings.ToLower(version), "v") {
+		return version
+	}
+
+	return "v" + version
 }
 
 func (h *TextHandler) colorizeLevel(level slog.Level, str string) string {
