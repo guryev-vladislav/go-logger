@@ -26,7 +26,13 @@ func NewSlogLoggerFactory(
 		fileWriter     io.Writer
 	)
 
-	consoleHandler = handlers.NewTextHandler(os.Stdout, level, handlers.IsTerminal(os.Stdout), serviceName)
+	consoleHandler = handlers.NewTextHandler(
+		os.Stdout,
+		level,
+		handlers.IsTerminal(os.Stdout),
+		serviceName,
+		version,
+	)
 
 	if logFilePath != emptyString {
 		fileWriter = &lumberjack.Logger{
@@ -51,10 +57,10 @@ func NewSlogLoggerFactory(
 		handler = consoleHandler
 	}
 
-	logger := slog.New(handler).With(
-		slog.String(serviceAttr, serviceName),
-		slog.String(versionAttr, version),
-	)
+	logger := slog.New(handler).With(slog.String(serviceAttr, serviceName))
+	if version != emptyString {
+		logger = logger.With(slog.String(versionAttr, version))
+	}
 
 	if standDomain != emptyString {
 		logger = logger.With(slog.String(standAttr, standDomain))

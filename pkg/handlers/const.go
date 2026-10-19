@@ -17,6 +17,7 @@ const (
 	funcNameAttr = "func_name"
 	sourceAttr   = "source"
 	serviceAttr  = "service"
+	versionAttr  = "version"
 )
 
 const (

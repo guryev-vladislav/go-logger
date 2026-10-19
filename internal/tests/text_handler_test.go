@@ -14,7 +14,7 @@ import (
 func TestTextHandlerPreservesAttrsAndGroupsWithoutColor(t *testing.T) {
 	var output bytes.Buffer
 
-	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service")
+	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service", "")
 	logger := slog.New(handler).With(slog.String("request_id", "abc"))
 
 	logger.WithGroup("http").InfoContext(context.Background(), "request", slog.Int("status", 200))
@@ -34,7 +34,7 @@ func TestTextHandlerPreservesAttrsAndGroupsWithoutColor(t *testing.T) {
 func TestTextHandlerFormatsRecord(t *testing.T) {
 	var output bytes.Buffer
 
-	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service")
+	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service", "")
 	record := slog.NewRecord(time.Now(), slog.LevelInfo, "message", 0)
 	record.AddAttrs(slog.String("key", "value"))
 
@@ -62,7 +62,7 @@ func TestTextHandlerUsesLevelSpecificColors(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var output bytes.Buffer
 
-			handler := handlers.NewTextHandler(&output, slog.LevelDebug, true, "service")
+			handler := handlers.NewTextHandler(&output, slog.LevelDebug, true, "service", "")
 			record := slog.NewRecord(time.Now(), test.level, test.name, 0)
 
 			if err := handler.Handle(context.Background(), record); err != nil {
@@ -74,5 +74,42 @@ func TestTextHandlerUsesLevelSpecificColors(t *testing.T) {
 				t.Fatalf("expected %s color in output %q", test.name, result)
 			}
 		})
+	}
+}
+
+func TestTextHandlerFormatsVersionAfterServiceName(t *testing.T) {
+	var output bytes.Buffer
+
+	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service", "1.0.1")
+	record := slog.NewRecord(time.Now(), slog.LevelInfo, "message", 0)
+
+	if err := handler.Handle(context.Background(), record); err != nil {
+		t.Fatalf("Handle() error = %v", err)
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "INFO - service v1.0.1 - ") {
+		t.Fatalf("expected version after service name, got %q", result)
+	}
+}
+
+func TestTextHandlerOmitsEmptyVersion(t *testing.T) {
+	var output bytes.Buffer
+
+	handler := handlers.NewTextHandler(&output, slog.LevelInfo, false, "service", "")
+	record := slog.NewRecord(time.Now(), slog.LevelInfo, "message", 0)
+	record.AddAttrs(slog.String("version", ""))
+
+	if err := handler.Handle(context.Background(), record); err != nil {
+		t.Fatalf("Handle() error = %v", err)
+	}
+
+	result := output.String()
+	if strings.Contains(result, "version") || strings.Contains(result, " v") {
+		t.Fatalf("expected empty version to be omitted, got %q", result)
+	}
+
+	if !strings.Contains(result, "INFO - service - ") {
+		t.Fatalf("expected service without version, got %q", result)
 	}
 }
