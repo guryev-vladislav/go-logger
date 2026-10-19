@@ -108,6 +108,7 @@ func TestTextHandlerOmitsEmptyVersion(t *testing.T) {
 	if strings.Contains(result, "version") || strings.Contains(result, " v") {
 		t.Fatalf("expected empty version to be omitted, got %q", result)
 	}
+
 	if !strings.Contains(result, "INFO - service - ") {
 		t.Fatalf("expected service without version, got %q", result)
 	}
